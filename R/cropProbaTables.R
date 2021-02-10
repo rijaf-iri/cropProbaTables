@@ -24,6 +24,9 @@
 #'     the 2nd column for the planting date, the 3rd column for the water requirements 
 #'     and the next columns contain the probabilities for the stations
 #'    }
+#'   \item{\strong{season_proba}: }{
+#'      A data.frame containing the probability of rainy season start on or before the panting dates.
+#'   }
 #'   \item{\strong{stations}: }{
 #'     A list containing the stations coordinates
 #'     \itemize{
@@ -78,6 +81,10 @@
 #' 
 #' output_directory <- "D:/DATA/DGM2021/CROP_PROBA"
 #' writeProbaTables(out$corp_proba, output_directory)
+#' 
+#' output_file <- "D:/DATA/DGM2021/CROP_PROBA/Season_start_proba_table.csv"
+#' writeSeasonProba(out$season_proba, output_file)
+#' 
 #' }
 #' 
 #' @export
@@ -200,6 +207,20 @@ cropProbaTables <- function(onset, cessation, precip_daily,
     names(data_pdate) <- p_dates
 
     ######
+    sprobs <- lapply(seq_along(pdaty), function(p){
+            yr <- if(pdaty[p] == "y1") year1 else year2
+            s1 <- paste0(yr, "/", planting_dates[p])
+            s1 <- as.Date(s1, "%Y/%d/%m")
+            pdates <- difftime(s1, as.Date(data$origin), units = "days")
+            cond <- sweep(data$onset, 1, pdates, FUN = "<=")
+            pr <- colMeans(cond, na.rm = TRUE)
+            round(pr, 4)
+        })
+    sprobs <- do.call(rbind, sprobs)
+    sprobs <- data.frame(p_dates, sprobs)
+    names(sprobs) <- c('PDates', coords$id)
+
+    ######
     probs <- lapply(crop_growing_season_lengths, function(cl){
         clen <- data.frame(Clength = cl)
         out <- lapply(seq_along(data_pdate), function(i){
@@ -222,6 +243,7 @@ cropProbaTables <- function(onset, cessation, precip_daily,
     names(probs) <- crop_growing_season_lengths
 
     list(corp_proba = probs,
+         season_proba = sprobs,
          stations = coords,
          planting_data = data_pdate,
          seasonal_data = data
@@ -284,5 +306,32 @@ writeProbaTables <- function(crop_proba, output_directory)
         utils::write.table(out, out_file, sep = ",", na = "", quote = FALSE,
                             row.names = FALSE, col.names = FALSE)
     }
+
+    invisible()
+}
+
+#' Write rainy season start probability.
+#'
+#' Write rainy season start probability table to CSV file.
+#' 
+#' @param season_proba The rainy season start probability computed from \code{cropProbaTables}.
+#' @param output_file The full path to the file to save the table.
+#' 
+#' @export
+
+writeSeasonProba <- function(season_proba, output_file){
+    pd <- season_proba$PDates
+    pr <- as.matrix(season_proba[, -1])
+    pr0 <- fraction(pr, 10)
+    pr0 <- paste('', pr0, rep())
+    dim(pr0) <- dim(pr)
+    pr <- cbind(names(season_proba[, -1]), t(pr0))
+    out <- rbind(c('', "Chance of season start on or before this date",
+                    rep('', length(pd) - 1)),
+                 c('Stations', pd), pr)
+
+    utils::write.table(out, output_file, sep = ",", na = "",
+                       quote = FALSE, row.names = FALSE,
+                       col.names = FALSE)
     invisible()
 }

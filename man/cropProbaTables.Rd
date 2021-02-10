@@ -44,6 +44,9 @@ A list object
     the 2nd column for the planting date, the 3rd column for the water requirements 
     and the next columns contain the probabilities for the stations
    }
+  \item{\strong{season_proba}: }{
+     A data.frame containing the probability of rainy season start on or before the panting dates.
+  }
   \item{\strong{stations}: }{
     A list containing the stations coordinates
     \itemize{
@@ -101,6 +104,10 @@ out <- cropProbaTables(
 
 output_directory <- "D:/DATA/DGM2021/CROP_PROBA"
 writeProbaTables(out$corp_proba, output_directory)
+
+output_file <- "D:/DATA/DGM2021/CROP_PROBA/Season_start_proba_table.csv"
+writeSeasonProba(out$season_proba, output_file)
+
 }
 
 }
