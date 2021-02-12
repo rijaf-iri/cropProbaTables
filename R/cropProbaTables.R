@@ -160,8 +160,11 @@ cropProbaTables <- function(onset, cessation, precip_daily,
     for(i in 1:nrow(data$amount)){
         for(j in 1:ncol(data$amount)){
             s1 <- as.Date(data$onset[i, j], origin = data$origin[i])
+            if(is.na(s1)) next
             s2 <- as.Date(data$cessation[i, j], origin = data$origin[i])
+            if(is.na(s2)) next
             ns <- minimum_fraction * data$length[i, j]
+            if(is.na(ns)) next
             ix <- which(daty >= s1 & daty <= s2)
             if(length(ix) < ns) next
             rr <- don$prc$data[ix, j]
@@ -192,6 +195,7 @@ cropProbaTables <- function(onset, cessation, precip_daily,
                 s1 <- paste0(yr, "/", planting_dates[p])
                 s1 <- as.Date(s1, "%Y/%d/%m")
                 s2 <- as.Date(data$cessation[i, j], origin = data$origin[i])
+                if(is.na(s2)) next
                 len[i, j] <- as.numeric(s2 - s1 + 1)
                 ns <- minimum_fraction * len[i, j]
                 ix <- which(daty >= s1 & daty <= s2)

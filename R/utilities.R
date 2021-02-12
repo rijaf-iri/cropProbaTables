@@ -9,4 +9,3 @@ convert_data_type <- function(mat, as.fun){
 fraction <- function(x, d){
     paste0(round(x * d), "/", d)
 }
-
